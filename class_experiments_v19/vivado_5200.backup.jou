@@ -1,0 +1,15 @@
+#-----------------------------------------------------------
+# Vivado v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+# IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+# Start of session at: Mon Dec  9 14:52:51 2019
+# Process ID: 5200
+# Current directory: C:/Users/sungyeong/Desktop/class_experiments_v19
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent8604 C:\Users\sungyeong\Desktop\class_experiments_v19\class_experiments_v19.xpr
+# Log file: C:/Users/sungyeong/Desktop/class_experiments_v19/vivado.log
+# Journal file: C:/Users/sungyeong/Desktop/class_experiments_v19\vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.xpr
+update_compile_order -fileset sources_1
+launch_sdk -workspace C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.sdk -hwspec C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.sdk/soc_wrapper.hdf

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;csd_lab/src/csd_asm.c&apos; to &apos;csd_asm.S&apos;" description="Rename resource &apos;csd_asm.c&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/csd_asm.c" name="csd_asm.S" stamp="1584597481832" updateReferences="true"/>
+</session>

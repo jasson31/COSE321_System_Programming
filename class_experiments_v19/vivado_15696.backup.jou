@@ -1,0 +1,39 @@
+#-----------------------------------------------------------
+# Vivado v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+# IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+# Start of session at: Mon Jan  6 11:23:23 2020
+# Process ID: 15696
+# Current directory: C:/Users/sungyeong/Desktop/class_experiments_v19
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent4696 C:\Users\sungyeong\Desktop\class_experiments_v19\class_experiments_v19.xpr
+# Log file: C:/Users/sungyeong/Desktop/class_experiments_v19/vivado.log
+# Journal file: C:/Users/sungyeong/Desktop/class_experiments_v19\vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.xpr
+update_compile_order -fileset sources_1
+open_bd_design {C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.srcs/sources_1/bd/soc/soc.bd}
+startgroup
+set_property -dict [list CONFIG.preset {ZedBoard}] [get_bd_cells processing_system7_0]
+set_property -dict [list CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1}] [get_bd_cells processing_system7_0]
+endgroup
+undo
+startgroup
+set_property -dict [list CONFIG.PCW_UART1_PERIPHERAL_ENABLE {1}] [get_bd_cells processing_system7_0]
+endgroup
+make_wrapper -files [get_files C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.srcs/sources_1/bd/soc/soc.bd] -top
+reset_run soc_processing_system7_0_0_synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 4
+wait_on_run synth_1
+launch_runs impl_1 -jobs 4
+wait_on_run impl_1
+open_run impl_1
+launch_runs impl_1 -to_step write_bitstream -jobs 4
+wait_on_run impl_1
+open_hw
+close_hw
+write_hwdef -force  -file C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.sdk/soc_wrapper.hdf
+launch_sdk -workspace C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.sdk -hwspec C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.sdk/soc_wrapper.hdf
+file copy -force C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.runs/impl_1/soc_wrapper.bit C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.sdk/soc_wrapper_hw_platform_0/soc_wrapper.bit
+open_bd_design {C:/Users/sungyeong/Desktop/class_experiments_v19/class_experiments_v19.srcs/sources_1/bd/soc/soc.bd}

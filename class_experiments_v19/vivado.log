@@ -1,0 +1,32 @@
+#-----------------------------------------------------------
+# Vivado v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+# IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+# Start of session at: Thu Mar 19 15:04:21 2020
+# Process ID: 27412
+# Current directory: C:/University/cose321/class_experiments_v19
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent18444 C:\University\cose321\class_experiments_v19\class_experiments_v19.xpr
+# Log file: C:/University/cose321/class_experiments_v19/vivado.log
+# Journal file: C:/University/cose321/class_experiments_v19\vivado.jou
+#-----------------------------------------------------------
+INFO: [Common 17-724] Xilinx Tcl Store apps are automatically updated.
+start_gui
+open_project C:/University/cose321/class_experiments_v19/class_experiments_v19.xpr
+INFO: [Project 1-313] Project file moved from 'C:/Users/sungyeong/Desktop/class_experiments_v19' since last save.
+Scanning sources...
+Finished scanning sources
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository 'C:/Xilinx/Vivado/2019.1/data/ip'.
+open_project: Time (s): cpu = 00:00:18 ; elapsed = 00:00:09 . Memory (MB): peak = 752.246 ; gain = 128.797
+update_compile_order -fileset sources_1
+launch_sdk -workspace C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk -hwspec C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk/soc_wrapper.hdf
+INFO: [Vivado 12-393] Launching SDK...
+INFO: [Vivado 12-417] Running xsdk -workspace C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk -hwspec C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk/soc_wrapper.hdf
+INFO: [Vivado 12-3157] SDK launch initiated. Please check console for any further messages.
+launch_sdk -workspace C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk -hwspec C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk/soc_wrapper.hdf
+INFO: [Vivado 12-393] Launching SDK...
+INFO: [Vivado 12-417] Running xsdk -workspace C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk -hwspec C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk/soc_wrapper.hdf
+INFO: [Vivado 12-3157] SDK launch initiated. Please check console for any further messages.
+exit
+INFO: [Common 17-206] Exiting Vivado at Thu Mar 19 15:07:32 2020...

@@ -1,0 +1,7 @@
+1575866546930	Delete resource 'csd_lab'
+1575866551757	Delete resource 'csd_lab_bsp'
+1575866556281	Delete resource 'soc_wrapper_hw_platform_1'
+1575866562889	Delete resource 'test'
+1575866567621	Delete resource 'test_bsp'
+1575867417982	Delete resource 'csd_lab/src/helloworld.c'
+1575870808129	Delete resource 'csd_lab/src/csd_asm.S'

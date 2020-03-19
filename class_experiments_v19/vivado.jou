@@ -1,0 +1,16 @@
+#-----------------------------------------------------------
+# Vivado v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+# IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+# Start of session at: Thu Mar 19 15:04:21 2020
+# Process ID: 27412
+# Current directory: C:/University/cose321/class_experiments_v19
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent18444 C:\University\cose321\class_experiments_v19\class_experiments_v19.xpr
+# Log file: C:/University/cose321/class_experiments_v19/vivado.log
+# Journal file: C:/University/cose321/class_experiments_v19\vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project C:/University/cose321/class_experiments_v19/class_experiments_v19.xpr
+update_compile_order -fileset sources_1
+launch_sdk -workspace C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk -hwspec C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk/soc_wrapper.hdf
+launch_sdk -workspace C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk -hwspec C:/University/cose321/class_experiments_v19/class_experiments_v19.sdk/soc_wrapper.hdf

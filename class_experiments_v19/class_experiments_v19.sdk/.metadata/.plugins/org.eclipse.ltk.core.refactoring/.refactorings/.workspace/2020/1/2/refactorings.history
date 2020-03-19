@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;csd_lab/src/uart_echo.S&apos;" deleteContents="false" description="Delete resource &apos;csd_lab/src/uart_echo.S&apos;" element1="/csd_lab/src/uart_echo.S" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1578282981313"/>
+</session>

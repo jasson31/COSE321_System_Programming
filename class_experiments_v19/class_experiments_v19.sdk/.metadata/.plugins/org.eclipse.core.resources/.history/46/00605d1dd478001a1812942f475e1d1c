@@ -16,7 +16,7 @@ copy_loop:
  	str r3, [r1, r2]
 	add r2, r2, #4
 	cmp r2, r9
-	blt copy_loop
+	bgt copy_loop
 
 	mov r2, #4
 

@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;soc_wrapper_hw_platform_1&apos;" deleteContents="true" description="Delete resource &apos;soc_wrapper_hw_platform_1&apos;" element1="/soc_wrapper_hw_platform_1" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1586265783150"/>&#x0A;<refactoring comment="Delete resource &apos;csd_lab/src/helloworld.c&apos;" deleteContents="false" description="Delete resource &apos;csd_lab/src/helloworld.c&apos;" element1="/csd_lab/src/helloworld.c" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1586265826558"/>
+</session>

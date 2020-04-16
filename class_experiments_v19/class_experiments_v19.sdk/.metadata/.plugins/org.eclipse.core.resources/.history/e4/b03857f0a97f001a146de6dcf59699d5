@@ -1,0 +1,35 @@
+
+#define csd_LED_ADDR 0x41200000
+
+.extern csd_main
+
+.global main
+main:
+ 	ldr r0, =csd_LED_ADDR
+ 	ldr r1, =timerMemory
+ 	mov r2, #1
+ 	str r2, [r0]
+forever:
+	lsl r2, r2, #1
+	cmp r2, #16
+	bgt rotateByte
+
+rotationReturn:
+ 	bl csd_main
+ 	ldr r3, [r1]
+timer:
+	subs r3, r3, #1
+	bne timer
+
+ 	str r2, [r0]
+ 	b forever
+
+rotateByte:
+	mov r2, #1
+	b rotationReturn
+
+.data
+.align 4
+
+timerMemory:
+ 	.word 1, 2, 3, 4, 5, 6, 7, 8

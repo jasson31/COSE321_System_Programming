@@ -1,0 +1,11 @@
+int csd_main()
+{
+	unsigned* switchPointer = (unsigned*)0x41210000;
+
+	if(*switchPointer)
+	{
+
+	}
+
+	return 0;
+}

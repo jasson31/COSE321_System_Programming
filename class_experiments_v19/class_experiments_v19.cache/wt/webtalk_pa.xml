@@ -3,7 +3,7 @@
 <!--The data in this file is primarily intended for consumption by Xilinx tools.
 The structure and the elements are likely to change over the next few releases.
 This means code written to parse this file will need to be revisited each subsequent release.-->
-<application name="pa" timeStamp="Sat Apr 18 01:09:46 2020">
+<application name="pa" timeStamp="Thu Apr 23 16:47:28 2020">
 <section name="Project Information" visible="false">
 <property name="ProjectID" value="7bec79719b904b43ad5d7d8389fc4cd7" type="ProjectID"/>
 <property name="ProjectIteration" value="9" type="ProjectIteration"/>
@@ -27,7 +27,7 @@ This means code written to parse this file will need to be revisited each subseq
 <property name="EditUndo" value="2" type="JavaHandler"/>
 <property name="ExportBitFile" value="7" type="JavaHandler"/>
 <property name="NewExportHardware" value="6" type="JavaHandler"/>
-<property name="NewLaunchHardware" value="20" type="JavaHandler"/>
+<property name="NewLaunchHardware" value="23" type="JavaHandler"/>
 <property name="NewProject" value="1" type="JavaHandler"/>
 <property name="OpenBlockDesign" value="1" type="JavaHandler"/>
 <property name="OpenHardwareManager" value="1" type="JavaHandler"/>
@@ -42,7 +42,7 @@ This means code written to parse this file will need to be revisited each subseq
 <item name="Gui Handlers">
 <property name="AddressTreeTablePanel_ADDRESS_TREE_TABLE" value="6" type="GuiHandlerData"/>
 <property name="BaseDialog_CANCEL" value="2" type="GuiHandlerData"/>
-<property name="BaseDialog_OK" value="67" type="GuiHandlerData"/>
+<property name="BaseDialog_OK" value="70" type="GuiHandlerData"/>
 <property name="BaseDialog_YES" value="3" type="GuiHandlerData"/>
 <property name="BoardChooser_BOARD_TABLE" value="1" type="GuiHandlerData"/>
 <property name="BoardInterfaceConnectionDialog_TREE_TABLE" value="2" type="GuiHandlerData"/>
@@ -62,15 +62,15 @@ This means code written to parse this file will need to be revisited each subseq
 <property name="LaunchPanel_LAUNCH_DIRECTORY" value="1" type="GuiHandlerData"/>
 <property name="MIOConfigTreeTablePanel_MIO_CONFIG_TREE_TABLE" value="36" type="GuiHandlerData"/>
 <property name="MIOTablePagePanel_MIO_TABLE" value="8" type="GuiHandlerData"/>
-<property name="MainMenuMgr_CHECKPOINT" value="42" type="GuiHandlerData"/>
+<property name="MainMenuMgr_CHECKPOINT" value="46" type="GuiHandlerData"/>
 <property name="MainMenuMgr_CONSTRAINTS" value="19" type="GuiHandlerData"/>
-<property name="MainMenuMgr_EXPORT" value="45" type="GuiHandlerData"/>
-<property name="MainMenuMgr_FILE" value="82" type="GuiHandlerData"/>
+<property name="MainMenuMgr_EXPORT" value="48" type="GuiHandlerData"/>
+<property name="MainMenuMgr_FILE" value="88" type="GuiHandlerData"/>
 <property name="MainMenuMgr_IMPORT" value="20" type="GuiHandlerData"/>
-<property name="MainMenuMgr_IP" value="43" type="GuiHandlerData"/>
+<property name="MainMenuMgr_IP" value="47" type="GuiHandlerData"/>
 <property name="MainMenuMgr_OPEN_RECENT_PROJECT" value="1" type="GuiHandlerData"/>
-<property name="MainMenuMgr_PROJECT" value="41" type="GuiHandlerData"/>
-<property name="MainMenuMgr_TEXT_EDITOR" value="40" type="GuiHandlerData"/>
+<property name="MainMenuMgr_PROJECT" value="43" type="GuiHandlerData"/>
+<property name="MainMenuMgr_TEXT_EDITOR" value="43" type="GuiHandlerData"/>
 <property name="MainToolbarMgr_RUN" value="6" type="GuiHandlerData"/>
 <property name="NewExportHardwareDialog_INCLUDE_BITSTREAM" value="3" type="GuiHandlerData"/>
 <property name="PACommandNames_AUTO_CONNECT_PORTS" value="4" type="GuiHandlerData"/>
@@ -78,7 +78,7 @@ This means code written to parse this file will need to be revisited each subseq
 <property name="PACommandNames_CREATE_TOP_HDL" value="4" type="GuiHandlerData"/>
 <property name="PACommandNames_EXPORT_BITSTREAM_FILES" value="7" type="GuiHandlerData"/>
 <property name="PACommandNames_EXPORT_HARDWARE" value="6" type="GuiHandlerData"/>
-<property name="PACommandNames_LAUNCH_HARDWARE" value="19" type="GuiHandlerData"/>
+<property name="PACommandNames_LAUNCH_HARDWARE" value="22" type="GuiHandlerData"/>
 <property name="PACommandNames_OPEN_HARDWARE_MANAGER" value="1" type="GuiHandlerData"/>
 <property name="PACommandNames_RUN_BITGEN" value="2" type="GuiHandlerData"/>
 <property name="PACommandNames_RUN_IMPLEMENTATION" value="1" type="GuiHandlerData"/>
@@ -96,7 +96,7 @@ This means code written to parse this file will need to be revisited each subseq
 <property name="SignalTreePanel_SIGNAL_TREE_PANEL" value="4" type="GuiHandlerData"/>
 <property name="SrcMenu_IP_HIERARCHY" value="2" type="GuiHandlerData"/>
 <property name="StaleMoreAction_OUT_OF_DATE_DETAILS" value="2" type="GuiHandlerData"/>
-<property name="SyntheticaGettingStartedView_RECENT_PROJECTS" value="5" type="GuiHandlerData"/>
+<property name="SyntheticaGettingStartedView_RECENT_PROJECTS" value="8" type="GuiHandlerData"/>
 <property name="SystemBuilderMenu_ADD_IP" value="2" type="GuiHandlerData"/>
 <property name="SystemBuilderMenu_ASSIGN_ADDRESS" value="2" type="GuiHandlerData"/>
 <property name="SystemBuilderView_OPTIMIZE_ROUTING" value="2" type="GuiHandlerData"/>
@@ -104,9 +104,9 @@ This means code written to parse this file will need to be revisited each subseq
 <property name="TaskBanner_CLOSE" value="1" type="GuiHandlerData"/>
 </item>
 <item name="Other">
-<property name="GuiMode" value="12" type="GuiMode"/>
+<property name="GuiMode" value="15" type="GuiMode"/>
 <property name="BatchMode" value="0" type="BatchMode"/>
-<property name="TclMode" value="11" type="TclMode"/>
+<property name="TclMode" value="14" type="TclMode"/>
 </item>
 </section>
 </application>

@@ -1,0 +1,11 @@
+int csd_main()
+{
+	unsigned* switchPointer = (unsigned*)0x41210000;	//Load switch I/O memory address
+	unsigned* timerMemory = (unsigned*)0x001019d0;		//Load timer information memory address
+
+	//Get switch status and set timer information depends on switch status
+	if(*timerMemory == 49) { *timerMemory = 0x04333333; }
+	else if(*timerMemory == 50) { *timerMemory = 0x2a000000; }
+
+	return 0;
+}

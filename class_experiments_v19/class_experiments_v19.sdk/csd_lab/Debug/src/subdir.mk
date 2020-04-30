@@ -11,15 +11,18 @@ C_SRCS += \
 ../src/platform.c 
 
 S_UPPER_SRCS += \
-../src/csd_asm.S 
+../src/csd_asm.S \
+../src/uart_init.S 
 
 OBJS += \
 ./src/csd_asm.o \
 ./src/csd_main.o \
-./src/platform.o 
+./src/platform.o \
+./src/uart_init.o 
 
 S_UPPER_DEPS += \
-./src/csd_asm.d 
+./src/csd_asm.d \
+./src/uart_init.d 
 
 C_DEPS += \
 ./src/csd_main.d \

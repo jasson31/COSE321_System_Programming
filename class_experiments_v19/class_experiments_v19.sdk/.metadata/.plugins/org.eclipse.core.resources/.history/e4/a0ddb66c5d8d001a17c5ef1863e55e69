@@ -150,7 +150,7 @@ printAIF:					//Print AIF flags
 
 	and r4, r10, #0x000001c0 //Mask AIF flags
 	mov r4, r4, lsr #6		//Shift masked value
-	mov r5, #4				//Find AIF flags string position of the value
+	mov r5, #45				//Find AIF flags string position of the value
 	mul r4, r4, r5
 	ldr r5, =AIFCode
 	add r5, r5, r4
@@ -252,7 +252,7 @@ printModeStatus:
 
 	mov r6, #28
 	mov r7, #0xF0000000
-printCPSR:					//Print CPSR register, works same as printRegister
+printCPSR:					//Print CPSR register
 	ldr r2, [r0]			//Load UART status
 	and	r2, r2, #0x8
 	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
@@ -286,26 +286,25 @@ printCPSRStatus:
 
 
 
-printStringLeft:			//Print string left
+printStringLeft:
 	ldr r2, [r0]			//Load UART status
 	and	r2, r2, #0x8
 	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printStringLeft		//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+	bne	printStringLeft	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
 
 	ldrb r4, [r12], #1		//Load one character from string
 	strb r4, [r1]			//Store one character from string to Tx FIFO
 	cmp r4, #0x00			//Check if string is end
-	bne printStringLeft		//If string is not end, repeat print
+	bne printStringLeft			//If string is not end, repeat print
 
 
-
-	msr cpsr, r10			//Reset cpsr
-	ldmfd r13!, {r0-r12}	//Reset r0 to r12 registers
-	ldr r14, [r13, #4]		//Reset lr
-	ldr r13, [r13]			//Reset sp
+	msr cpsr, r10
+	ldmfd r13!, {r0-r12}
+	ldr r14, [r13, #4]
+	ldr r13, [r13]
 	add r13, r13, #64
 
-	mov pc, lr				//Return to caller
+	mov pc, lr
 
 
 

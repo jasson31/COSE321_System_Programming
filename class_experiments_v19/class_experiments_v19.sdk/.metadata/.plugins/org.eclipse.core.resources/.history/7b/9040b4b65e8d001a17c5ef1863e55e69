@@ -38,7 +38,7 @@ end_loop:					//End of the insertion loop
 
 	cmp r2, r9				//Compare if insert value index is over total data length
 
-	bl debugMacro			//Debugging macro
+	blge debugMacro			//Debugging macro
 
 	bge forever				//If inserted all values, end program
 

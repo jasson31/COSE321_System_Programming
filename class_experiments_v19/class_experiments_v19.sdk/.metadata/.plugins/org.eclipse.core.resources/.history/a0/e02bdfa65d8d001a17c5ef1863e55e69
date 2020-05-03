@@ -150,7 +150,7 @@ printAIF:					//Print AIF flags
 
 	and r4, r10, #0x000001c0 //Mask AIF flags
 	mov r4, r4, lsr #6		//Shift masked value
-	mov r5, #4				//Find AIF flags string position of the value
+	mov r5, #45				//Find AIF flags string position of the value
 	mul r4, r4, r5
 	ldr r5, =AIFCode
 	add r5, r5, r4
@@ -302,10 +302,10 @@ printStringLeft:			//Print string left
 	msr cpsr, r10			//Reset cpsr
 	ldmfd r13!, {r0-r12}	//Reset r0 to r12 registers
 	ldr r14, [r13, #4]		//Reset lr
-	ldr r13, [r13]			//Reset sp
+	ldr r13, [r13]
 	add r13, r13, #64
 
-	mov pc, lr				//Return to caller
+	mov pc, lr
 
 
 

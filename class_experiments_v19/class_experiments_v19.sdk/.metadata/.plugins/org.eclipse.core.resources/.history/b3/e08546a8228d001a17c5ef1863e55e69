@@ -1,0 +1,255 @@
+//Author : Jaemin Son
+//Date : 2020/4/8
+//Description : Sort 32 words from smallest to biggest
+//				Insertion sort algorithm was used
+
+#include "uart_init.s"
+
+.global main
+main:
+	UART_init		// UART Initialization
+
+	ldr r0, =Input_data		//Used for input data address indexing
+	ldr r1, =Output_data	//Used for output data address indexing
+
+	sub r9, r1, r0			//Get total data length
+
+	ldr r3, [r0]
+ 	str r3, [r1]			//Copy 0th index value of input data to output data
+	mov r2, #4				//R2 for index of value to insert
+
+	bl debugMacro
+
+insertion_loop:				//Starts insertion sort algorithm
+	mov r3, r2				//R3 for insertion loop count
+	ldr r4, [r0, r2]		//Load value to insert from input data
+
+find_position:				//Find position to insert value
+	sub r6, r3, #4			//R6 for index of value to compare
+	ldr r5, [r1, r6]		//Load value to compare from output data
+
+	cmp r4, r5				//Compare values
+	bge end_loop			//If value to insert is greater than compared value, insert position is found
+
+	str r5, [r1, r3]		//Push compared value backward
+
+	subs r3, r3, #4			//Decrease loop count
+	bne find_position		//If loop count is 0, end insertion loop
+
+end_loop:					//End of the insertion loop
+	str r4, [r1, r3]		//Insert the insert value to the position found
+	add r2, r2, #4			//Increase the insert value index
+
+	cmp r2, r9				//Compare if insert value index is over total data length
+	blge debugMacro
+	bge forever				//If inserted all values, end program
+
+	b insertion_loop		//Do insertion loop again
+
+forever:					//Program ended
+	nop
+	b forever
+
+
+
+
+
+
+
+
+debugMacro:
+	STMFD R13!, {R0-R15}
+	MRS R2, CPSR
+
+	ldr r0, =uart_Channel_sts_reg0	//Load UART status register address
+	ldr r1, =uart_TX_RX_FIFO0		//Load UART FIFO register address
+
+	ldr	r11, =HexCode
+	ldr	r12, =string
+
+	mov r3, #0
+
+printRegisters:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printRegisters			//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldr r8, [R13, r3]
+
+printRegisterName:
+	ldrb r4, [r12], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printRegisterName			//If string is not end, repeat print
+
+	mov r6, #28
+	mov r7, #0xF0000000
+printHexMain:
+	and r9, r8, r7
+	mov r9, r9, lsr r6
+	add r5, r11, r9
+	ldrb r5, [r5]
+	strb r5, [r1]			//Store one character from string to Tx FIFO
+
+	cmp r6, #16
+	moveq r5, #95
+	streqb r5, [r1]
+
+	sub r6, r6, #4
+	mov r7, r7, lsr #4
+	cmp r6, #-4
+	bne printHexMain
+
+
+
+	add r3, r3, #4
+	cmp r3, #64
+	bne printRegisters
+
+
+
+
+
+
+
+
+	ldmfd r13!, {r0-r12}
+	ldr r13, [r13]
+
+	mov pc, lr
+
+
+
+
+
+
+
+
+.data
+.align 4
+Input_data:	.word 2, 0, -7, -1, 3, 8, -4, 10
+			.word -9, -16, 15, 13, 1, 4, -3, 14
+			.word -8, -10, -15, 6, -13, -5, 9, 12
+			.word -11, -14, -6, 11, 5, 7, -2, -12
+Output_data:	.word 0, 0, 0, 0, 0, 0, 0, 0
+				.word 0, 0, 0, 0, 0, 0, 0, 0
+				.word 0, 0, 0, 0, 0, 0, 0, 0
+				.word 0, 0, 0, 0, 0, 0, 0, 0
+
+HexCode:
+	.ascii "0"
+	.ascii "1"
+	.ascii "2"
+	.ascii "3"
+	.ascii "4"
+	.ascii "5"
+	.ascii "6"
+	.ascii "7"
+	.ascii "8"
+	.ascii "9"
+	.ascii "A"
+	.ascii "B"
+	.ascii "C"
+	.ascii "D"
+	.ascii "E"
+	.ascii "F"
+
+string:
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "-----------------------------------------------------------------------------------------------------"
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "r0 = 0x"
+	.byte 0x00
+	.byte 0x2C
+	.byte 0x09
+	.ascii "r1 = 0x"
+	.byte 0x00
+	.byte 0x2C
+	.byte 0x09
+	.ascii "r2 = 0x"
+	.byte 0x00
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "r3 = 0x"
+	.byte 0x00
+	.byte 0x2C
+	.byte 0x09
+	.ascii "r4 = 0x"
+	.byte 0x00
+	.byte 0x2C
+	.byte 0x09
+	.ascii "r5 = 0x"
+	.byte 0x00
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "r6 = 0x"
+	.byte 0x00
+	.byte 0x2C
+	.byte 0x09
+	.ascii "r7 = 0x"
+	.byte 0x00
+	.byte 0x2C
+	.byte 0x09
+	.ascii "r8 = 0x"
+	.byte 0x00
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "r9 = 0x"
+	.byte 0x00
+	.byte 0x2C
+	.byte 0x09
+	.ascii "r10 = 0x"
+	.byte 0x00
+	.byte 0x2C
+	.byte 0x09
+	.ascii "r11 = 0x"
+	.byte 0x00
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "r12 = 0x"
+	.byte 0x00
+	.byte 0x2C
+	.byte 0x09
+	.ascii "r13 = 0x"
+	.byte 0x00
+	.byte 0x2C
+	.byte 0x09
+	.ascii "r14 = 0x"
+	.byte 0x00
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "r15 = 0x"
+	.byte 0x00
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "-----------------------------------------------------------------------------------------------------"
+
+
+/*string:
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "-----------------------------------------------------------------------------------------------------"
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "r0 = 0x1000_0123, r1 = 0xffee_0112, r2 = 0x9800_ab00, r3 = 0xfe03_0010"
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "r4 = 0xffff_1000, r5 = 0xc123_0112, r6 = 0x1800_1100, r7 = 0xbe10_0030"
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "r8 = 0x2200_0140, r9 = 0x55ee_0112, r10 = 0x1200_1200, r11 = 0x9803_2210"
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "r12 = 0x3300_0100, r13 = 0xccee_0112, r14 = 0x3400_ab00, r15 = 0x0010_0304"
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "cpsr = nZCv, IF, ARM mode, current mode = SVC ( =0x6000_00d3)"
+	.byte 0x0D
+	.byte 0x0A
+	.ascii "-----------------------------------------------------------------------------------------------------"
+	.byte 0x0D
+	.byte 0x0A
+	.byte 0x00*/

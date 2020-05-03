@@ -1,5 +1,5 @@
 eclipse.preferences.version=1
-org.eclipse.debug.ui.MemoryView.RenderingViewPane.1=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<persistedMemoryRenderings>\r\n<memoryRendering memoryBlock\="593872087" renderingId\="org.eclipse.debug.ui.rendering.hexint"/>\r\n</persistedMemoryRenderings>\r\n
+org.eclipse.debug.ui.MemoryView.RenderingViewPane.1=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<persistedMemoryRenderings>\r\n<memoryRendering memoryBlock\="436588339" renderingId\="org.eclipse.debug.ui.rendering.hexint"/>\r\n<memoryRendering memoryBlock\="436588339" renderingId\="org.eclipse.debug.ui.rendering.ascii"/>\r\n<memoryRendering memoryBlock\="1741794804" renderingId\="org.eclipse.debug.ui.rendering.hexint"/>\r\n</persistedMemoryRenderings>\r\n
 org.eclipse.debug.ui.MemoryView.orientation=0
 org.eclipse.debug.ui.MemoryView.orientation.org.eclipse.debug.ui.MemoryView.0=0
 org.eclipse.debug.ui.MemoryView.orientation.org.eclipse.debug.ui.MemoryView.1=0

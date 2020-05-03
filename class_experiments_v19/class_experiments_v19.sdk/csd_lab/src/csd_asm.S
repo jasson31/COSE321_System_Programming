@@ -1,126 +1,455 @@
 
-#define csd_LED_ADDR	0x41200000
-
 #include "uart_init.s"
 
-.align 8
-
-// Our interrupt vector table
-csd_entry:
-	b csd_reset
-	b .
-	b .
-	b .
-	b .
-	b .
-	b .
-	b .
-
 .global main
-csd_reset:
 main:
+	UART_init				// UART Initialization
 
-	UART_init		// UART Initialization
+	ldr r0, =Input_data		//Used for input data address indexing
+	ldr r1, =Output_data	//Used for output data address indexing
+
+	sub r9, r1, r0			//Get total data length
+
+	ldr r3, [r0]
+ 	str r3, [r1]			//Copy 0th index value of input data to output data
+	mov r2, #4				//R2 for index of value to insert
+
+	bl debugMacro
+
+insertion_loop:				//Starts insertion sort algorithm
+	mov r3, r2				//R3 for insertion loop count
+	ldr r4, [r0, r2]		//Load value to insert from input data
+
+find_position:				//Find position to insert value
+	sub r6, r3, #4			//R6 for index of value to compare
+	ldr r5, [r1, r6]		//Load value to compare from output data
+
+	cmp r4, r5				//Compare values
+	bge end_loop			//If value to insert is greater than compared value, insert position is found
+
+	str r5, [r1, r3]		//Push compared value backward
+
+	subs r3, r3, #4			//Decrease loop count
+	bne find_position		//If loop count is 0, end insertion loop
+
+end_loop:					//End of the insertion loop
+	str r4, [r1, r3]		//Insert the insert value to the position found
+	add r2, r2, #4			//Increase the insert value index
+
+	cmp r2, r9				//Compare if insert value index is over total data length
+	bl debugMacro
+	bge forever				//If inserted all values, end program
+
+	b insertion_loop		//Do insertion loop again
+
+forever:					//Program ended
+	nop
+	b forever
+
+
+
+debugMacro:
+	STMFD R13!, {R0-R15}
+	mrs r10, cpsr
 
 	ldr r0, =uart_Channel_sts_reg0	//Load UART status register address
 	ldr r1, =uart_TX_RX_FIFO0		//Load UART FIFO register address
-	ldr	r2, =string					//Load string memory address
 
-	bl UART_print			//Print string to Tera Term
- 	ldr r6, =csd_LED_ADDR	//Load led I/O memory address
- 	ldr r8, =timerInfo		//Load timer information memory address
- 	mov r4, #0b00000001		//Set initial LED status to 1
- 	str r4, [r6]			//Update LED status
- 	mov r5, #0x2a000000		//Set initial timer to 1 sec
+	ldr	r11, =HexCode
+	ldr	r12, =string
 
-forever:
-	ldr r3, [r0]			//Load UART status
-	and r3, r3, #1<<1
-	cmp r3, #0				//Check if Rx FIFO is empty or not
+	mov r3, #0
 
-	ldreq r4, [r1]			//Load from Rx FIFO -> Receive from Tera Term
-	streq r4, [r1]			//Store received data to Tx FIFO -> Send to Tera Term
+printRegisters:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printRegisters			//If Tx FIFO is not empty, loop this until Tx FIFO is empty
 
-	//Compare received data from Tera Term
-	//If received data is between 1 to 8, set timer according to information
-	//If received data is not between 1 to 8, don't update timer
-	cmp r4, #49
-	ldreq r5, [r8]
-	beq rotation
-	cmp r4, #50
-	ldreq r5, [r8, #4]
-	beq rotation
-	cmp r4, #51
-	ldreq r5, [r8, #8]
-	beq rotation
-	cmp r4, #52
-	ldreq r5, [r8, #12]
-	beq rotation
-	cmp r4, #53
-	ldreq r5, [r8, #16]
-	beq rotation
-	cmp r4, #54
-	ldreq r5, [r8, #20]
-	beq rotation
-	cmp r4, #55
-	ldreq r5, [r8, #24]
-	beq rotation
-	cmp r4, #56
-	ldreq r5, [r8, #28]
-	beq rotation
+	ldr r8, [R13, r3]
 
-rotation:
-	mov r7, r5				//Set timer count
-	ldr r4, [r6]			//Load current LED status
-	lsl r4, r4, #1			//Shift LED status left by 1
-	cmp r4, #0b10000000		//Check if LED status is over LED range
-	bgt rotateByte			//IF LED status is over LED range, reset LED status to 1
+printRegisterName:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printRegisterName	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
 
-
-timer:
-	subs r7, r7, #1			//Decrease timer count
-	bne timer				//If timer count is 0, end timer
-
- 	str r4, [r6]			//Update LED status
- 	b forever				//Repeat the program
-
-rotateByte:
-	mov r4, #1				//Reset LED status to 1
-	b timer					//Return
-
-UART_print:
-	ldr r3, [r0]			//Load UART status
-	and	r3, r3, #0x8
-	cmp	r3, #0x8			//Check if Tx FIFO is empty or not
-	bne	UART_print			//If Tx FIFO is not empty, loop this until Tx FIFO is empty
-
-	ldrb r4, [r2], #1		//Load one character from string
+	ldrb r4, [r12], #1		//Load one character from string
 	strb r4, [r1]			//Store one character from string to Tx FIFO
 	cmp r4, #0x00			//Check if string is end
-	bne UART_print			//If string is not end, repeat print
+	bne printRegisterName			//If string is not end, repeat print
+
+	mov r6, #28
+	mov r7, #0xF0000000
+printHexMain:
+	and r9, r8, r7
+	mov r9, r9, lsr r6
+	add r5, r11, r9
+	ldrb r5, [r5]
+	strb r5, [r1]			//Store one character from string to Tx FIFO
+
+	cmp r6, #16
+	moveq r5, #95
+	streqb r5, [r1]
+
+	sub r6, r6, #4
+	mov r7, r7, lsr #4
+	cmp r6, #-4
+	bne printHexMain
+
+	add r3, r3, #4
+	cmp r3, #64
+	bne printRegisters
+
+
+printNZCV:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printNZCV	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldrb r4, [r12], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printNZCV			//If string is not end, repeat print
+
+	and r4, r10, #0xf0000000
+	mov r4, r4, lsr #28
+	mov r5, #5
+	mul r4, r4, r5
+	ldr r5, =NZCVCode
+	add r5, r5, r4
+
+printNZCVStatus:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printNZCVStatus	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldrb r4, [r5], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printNZCVStatus			//If string is not end, repeat print
+
+
+
+printAIF:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printAIF	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldrb r4, [r12], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printAIF			//If string is not end, repeat print
+
+	and r4, r10, #0x000001c0
+	mov r4, r4, lsr #6
+	mov r5, #4
+	mul r4, r4, r5
+	ldr r5, =AIFCode
+	add r5, r5, r4
+
+printAIFStatus:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printAIFStatus	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldrb r4, [r5], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printAIFStatus			//If string is not end, repeat print
+
+
+
+printCurrentMode:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printCurrentMode	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldrb r4, [r12], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printCurrentMode			//If string is not end, repeat print
+
+	and r5, r10, #0x01000000
+	mov r4, r5, lsr #23
+	and r5, r10, #0x00000020
+	add r4, r5, lsr #5
+	mov r5, #13
+	mul r4, r4, r5
+	ldr r5, =CModeCode
+	add r5, r5, r4
+
+printCurrentModeStatus:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printCurrentModeStatus	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldrb r4, [r5], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printCurrentModeStatus			//If string is not end, repeat print
+
+
+
+printMode:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printMode	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldrb r4, [r12], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printMode			//If string is not end, repeat print
+
+	and r4, r10, #0x0000001f
+	cmp r4, #0b10000
+	moveq r5, #0
+	cmp r4, #0b10001
+	moveq r5, #4
+	cmp r4, #0b10010
+	moveq r5, #8
+	cmp r4, #0b10011
+	moveq r5, #12
+	cmp r4, #0b10110
+	moveq r5, #16
+	cmp r4, #0b10111
+	moveq r5, #20
+	cmp r4, #0b11010
+	moveq r5, #24
+	cmp r4, #0b11011
+	moveq r5, #28
+	cmp r4, #0b11111
+	moveq r5, #32
+
+	mov r4, r5
+	ldr r5, =ModeCode
+	add r5, r5, r4
+
+printModeStatus:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printModeStatus	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldrb r4, [r5], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printModeStatus			//If string is not end, repeat print
+
+
+
+	mov r6, #28
+	mov r7, #0xF0000000
+printCPSR:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printCPSR	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldrb r4, [r12], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printCPSR			//If string is not end, repeat print
+
+printCPSRStatus:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printCPSRStatus	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	and r9, r10, r7
+	mov r9, r9, lsr r6
+	add r5, r11, r9
+	ldrb r5, [r5]
+	strb r5, [r1]			//Store one character from string to Tx FIFO
+
+	cmp r6, #16
+	moveq r5, #95
+	streqb r5, [r1]
+
+	sub r6, r6, #4
+	mov r7, r7, lsr #4
+	cmp r6, #-4
+	bne printCPSRStatus
+
+
+
+printStringLeft:
+	ldr r2, [r0]			//Load UART status
+	and	r2, r2, #0x8
+	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
+	bne	printStringLeft	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	ldrb r4, [r12], #1		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne printStringLeft			//If string is not end, repeat print
+
+
+	msr cpsr, r10
+	ldmfd r13!, {r0-r12}
+	ldr r14, [r13, #4]
+	ldr r13, [r13]
 
 	mov pc, lr
 
-	.data
-string:
-	.byte 0x0D
-	.byte 0x0A
-	.ascii "----------------- LED On Duration ----------------"
-	.byte 0x0D
-	.byte 0x0A
-	.ascii "1. 100ms 2. 200ms 3. 300ms 4. 400 ms"
-	.byte 0x0D
-	.byte 0x0A
-	.ascii "5. 500ms 6. 600ms 7. 700ms 8. 1 sec"
-	.byte 0x0D
-	.byte 0x0A
-	.ascii "---------------------------------------------------"
-	.byte 0x0D
-	.byte 0x0A
-	.ascii "Select:"
-	.byte 0x0D
-	.byte 0x0A
+
+
+.data
+.align 4
+Input_data:	.word 2, 0, -7, -1, 3, 8, -4, 10
+			.word -9, -16, 15, 13, 1, 4, -3, 14
+			.word -8, -10, -15, 6, -13, -5, 9, 12
+			.word -11, -14, -6, 11, 5, 7, -2, -12
+Output_data:	.word 0, 0, 0, 0, 0, 0, 0, 0
+				.word 0, 0, 0, 0, 0, 0, 0, 0
+				.word 0, 0, 0, 0, 0, 0, 0, 0
+				.word 0, 0, 0, 0, 0, 0, 0, 0
+
+HexCode:
+	.ascii "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"
+
+NZCVCode:
+	.ascii "nzcv"
+	.byte 0x00
+	.ascii "nzcV"
+	.byte 0x00
+	.ascii "nzCv"
+	.byte 0x00
+	.ascii "nzCV"
+	.byte 0x00
+	.ascii "nZcv"
+	.byte 0x00
+	.ascii "nZcV"
+	.byte 0x00
+	.ascii "nZCv"
+	.byte 0x00
+	.ascii "nZCV"
+	.byte 0x00
+	.ascii "Nzcv"
+	.byte 0x00
+	.ascii "NzcV"
+	.byte 0x00
+	.ascii "NzCv"
+	.byte 0x00
+	.ascii "NzCV"
+	.byte 0x00
+	.ascii "NZcv"
+	.byte 0x00
+	.ascii "NZcV"
+	.byte 0x00
+	.ascii "NZCv"
+	.byte 0x00
+	.ascii "NZCV"
 	.byte 0x00
 
-timerInfo:
-	.word 0x04333333, 0x08666666, 0x0c999999, 0x10cccccc, 0x14ffffff, 0x19333332, 0x1d666665, 0x21999998
+AIFCode:
+	.ascii "aif"
+	.byte 0x00
+	.ascii "aiF"
+	.byte 0x00
+	.ascii "aIf"
+	.byte 0x00
+	.ascii "aIF"
+	.byte 0x00
+	.ascii "Aif"
+	.byte 0x00
+	.ascii "AiF"
+	.byte 0x00
+	.ascii "AIf"
+	.byte 0x00
+	.ascii "AIF"
+	.byte 0x00
+
+ModeCode:
+	.ascii "USR"
+	.byte 0x00
+	.ascii "FIQ"
+	.byte 0x00
+	.ascii "IRQ"
+	.byte 0x00
+	.ascii "SVC"
+	.byte 0x00
+	.ascii "MON"
+	.byte 0x00
+	.ascii "ABT"
+	.byte 0x00
+	.ascii "HYP"
+	.byte 0x00
+	.ascii "UND"
+	.byte 0x00
+	.ascii "SYS"
+	.byte 0x00
+
+CModeCode:
+	.ascii "ARM mode"
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.ascii "Thumb mode"
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.ascii "Jazelle mode"
+	.byte 0x00
+	.ascii "ThumbEE mode"
+	.byte 0x00
+
+string:
+	.byte 0x0D, 0x0A
+	.ascii "-----------------------------------------------------------------------------------------------------"
+	.byte 0x0D, 0x0A
+	.ascii "r0 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r1 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r2 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r3 = 0x"
+	.byte 0x00, 0x0D, 0x0A
+	.ascii "r4 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r5 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r6 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r7 = 0x"
+	.byte 0x00, 0x0D, 0x0A
+	.ascii "r8 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r9 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r10 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r11 = 0x"
+	.byte 0x00, 0x0D, 0x0A
+	.ascii "r12 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r13 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r14 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r15 = 0x"
+	.byte 0x00, 0x0D, 0x0A
+	.ascii "cpsr = "
+	.byte 0x00, 0x2C, 0x09
+	.byte 0x00, 0x2C, 0x09
+	.byte 0x00, 0x2C, 0x09
+	.ascii "current mode = "
+	.byte 0x00, 0x09
+	.ascii " ( =0x"
+	.byte 0x00
+	.ascii ")"
+	.byte 0x0D, 0x0A
+	.ascii "-----------------------------------------------------------------------------------------------------"
+	.byte 0x0D, 0x0A, 0x00
+

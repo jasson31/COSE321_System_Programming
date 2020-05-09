@@ -6,9 +6,6 @@
 LD_SRCS += \
 ../src/lscript.ld 
 
-S_SRCS += \
-../src/debug_macro.s 
-
 C_SRCS += \
 ../src/csd_main.c \
 ../src/platform.c 
@@ -20,7 +17,6 @@ S_UPPER_SRCS += \
 OBJS += \
 ./src/csd_asm.o \
 ./src/csd_main.o \
-./src/debug_macro.o \
 ./src/platform.o \
 ./src/uart_init.o 
 
@@ -45,13 +41,6 @@ src/%.o: ../src/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: ARM v7 gcc compiler'
 	arm-none-eabi-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"$@" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I../../csd_lab_bsp/ps7_cortexa9_0/include -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
-	@echo 'Finished building: $<'
-	@echo ' '
-
-src/%.o: ../src/%.s
-	@echo 'Building file: $<'
-	@echo 'Invoking: ARM v7 gcc assembler'
-	arm-none-eabi-gcc -c  -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

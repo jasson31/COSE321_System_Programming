@@ -1,8 +1,8 @@
-02:04:17 **** Incremental Build of configuration Debug for project csd_lab ****
+02:31:44 **** Incremental Build of configuration Debug for project csd_lab ****
 make pre-build main-build 
 a9-linaro-pre-build-step
 ' '
 make: Nothing to be done for 'main-build'.
 
-02:04:17 Build Finished (took 327ms)
+02:31:44 Build Finished (took 375ms)
 

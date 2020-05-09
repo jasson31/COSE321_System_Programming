@@ -1,0 +1,109 @@
+
+#include "uart_init.s"
+#include "csd_zynq_peripherals.h"
+
+#define TIMER_INITIAL	333000000
+
+.global main
+main:
+	UART_init		// UART Initialization
+
+	mrs	r0, cpsr			/* get the current PSR */
+	mvn	r1, #0x1f		/* To mask out the MODE bits (M[4:0]) in CPSR */
+	and	r2, r1, r0
+	orr	r2, r2, #0x1F	/* SYS mode */
+	msr	cpsr, r2
+
+ 	// Private Timer Load Register
+	ldr r0, =PRIVATE_LOAD
+ 	ldr r1, =TIMER_INITIAL
+ 	str r1, [r0]
+
+ 	// Private Timer Control Register
+  	ldr r0, =PRIVATE_CONTROL
+ 	mov r1, #0
+ 	orr r1, r1, #7     // IRQ Enable, Auto-Reload, Timer Enable
+ 	str r1, [r0]
+
+	ldr r0, =uart_Channel_sts_reg0	//Load UART status register address
+	ldr r1, =uart_TX_RX_FIFO0		//Load UART FIFO register address
+  	ldr r2, =PRIVATE_COUNTER		//Load timer counter register address
+  	ldr r3, =PRIVATE_STATUS			//Load timer status register address
+
+	//Set all number (hour, minute, second) to '0'
+  	mov r7, #48
+  	mov r8, #48
+  	mov r9, #48
+  	mov r10, #48
+  	mov r11, #48
+  	mov r12, #48
+
+	bl UART_print
+
+forever:
+
+  	ldr r5, [r2]   					//Read the counter value
+  	ldr r6, [r3]   					//Read the status register
+
+	cmp r6, #1						//
+
+	bleq Add_Timer
+
+	b forever
+
+Add_Timer:
+	add r7, r7, #1
+
+	cmp r7, #58
+	moveq r7, #48
+	addeq r8, r8, #1
+
+	cmp r8, #54
+	moveq r8, #48
+	addeq r9, r9, #1
+
+	cmp r9, #58
+	moveq r9, #48
+	addeq r10, r10, #1
+
+	cmp r10, #54
+	moveq r10, #48
+	addeq r11, r11, #1
+
+	cmp r11, #58
+	moveq r11, #48
+	addeq r12, r12, #1
+
+	cmp r12, #58
+	moveq r12, #48
+
+	b UART_print
+
+UART_print:
+	ldr r4, [r0]			//Load UART status
+	and	r4, r4, #0x8
+	cmp	r4, #0x8			//Check if Tx FIFO is empty or not
+	bne	UART_print			//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+
+	mov r4, #13
+	strb r4, [r1]			//Return cursor to start of the line
+
+	strb r12, [r1]			//Print first number of hour
+	strb r11, [r1]			//Print second number of hour
+	mov r4, #58
+	strb r4, [r1]			//Print ':' letter
+
+	strb r10, [r1]			//Print first number of minute
+	strb r9, [r1]			//Print second number of minute
+	mov r4, #58
+	strb r4, [r1]			//Print ':' letter
+
+	strb r8, [r1]			//Print first number of second
+	strb r7, [r1]			//Print second number of second
+
+	moveq  r4, #1
+	streq  r4, [r3]			//Clear status register
+
+	mov pc, lr
+

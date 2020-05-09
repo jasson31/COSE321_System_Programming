@@ -1,0 +1,21 @@
+
+#include "uart_init.s"
+
+.global main
+main:
+	UART_init				// UART Initialization
+
+	ldr r0, =Input_data		//Used for input data address indexing
+	ldr r1, =Output_data	//Used for output data address indexing
+
+
+forever:					//Program ended
+	nop
+	b forever
+
+.data
+.align 4
+
+HexCode:
+	.ascii "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"
+

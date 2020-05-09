@@ -1,462 +1,111 @@
 
 #include "uart_init.s"
+#include "csd_zynq_peripherals.h"
+
+#define TIMER_INITIAL	333000000
 
 .global main
 main:
-	UART_init				// UART Initialization
+	UART_init		// UART Initialization
 
-	ldr r0, =Input_data		//Used for input data address indexing
-	ldr r1, =Output_data	//Used for output data address indexing
+	mrs	r0, cpsr			/* get the current PSR */
+	mvn	r1, #0x1f		/* To mask out the MODE bits (M[4:0]) in CPSR */
+	and	r2, r1, r0
+	orr	r2, r2, #0x1F	/* SYS mode */
+	msr	cpsr, r2
 
-	sub r9, r1, r0			//Get total data length
+ 	// Private Timer Load Register
+	ldr r0, =PRIVATE_LOAD
+ 	ldr r1, =TIMER_INITIAL
+ 	str r1, [r0]
 
-	ldr r3, [r0]
- 	str r3, [r1]			//Copy 0th index value of input data to output data
-	mov r2, #4				//R2 for index of value to insert
-
-	bl debugMacro			//Debugging macro
-
-insertion_loop:				//Starts insertion sort algorithm
-	mov r3, r2				//R3 for insertion loop count
-	ldr r4, [r0, r2]		//Load value to insert from input data
-
-find_position:				//Find position to insert value
-	sub r6, r3, #4			//R6 for index of value to compare
-	ldr r5, [r1, r6]		//Load value to compare from output data
-
-	cmp r4, r5				//Compare values
-	bge end_loop			//If value to insert is greater than compared value, insert position is found
-
-	str r5, [r1, r3]		//Push compared value backward
-
-	subs r3, r3, #4			//Decrease loop count
-	bne find_position		//If loop count is 0, end insertion loop
-
-end_loop:					//End of the insertion loop
-	str r4, [r1, r3]		//Insert the insert value to the position found
-	add r2, r2, #4			//Increase the insert value index
-
-	cmp r2, r9				//Compare if insert value index is over total data length
-
-	bl debugMacro			//Debugging macro
-
-	bge forever				//If inserted all values, end program
-
-	b insertion_loop		//Do insertion loop again
-
-forever:					//Program ended
-	nop
-	b forever
-
-
-
-debugMacro:					//Debugging macro
-	STMFD R13!, {R0-R15}	//Store current registers to stack
-	mrs r10, cpsr			//Get current CPSR
+ 	// Private Timer Control Register
+  	ldr r0, =PRIVATE_CONTROL
+ 	mov r1, #0
+ 	orr r1, r1, #7     // IRQ Enable, Auto-Reload, Timer Enable
+ 	str r1, [r0]
 
 	ldr r0, =uart_Channel_sts_reg0	//Load UART status register address
 	ldr r1, =uart_TX_RX_FIFO0		//Load UART FIFO register address
+  	ldr r2, =PRIVATE_COUNTER		//Load timer counter register address
+  	ldr r3, =PRIVATE_STATUS			//Load timer status register address
 
-	ldr	r11, =HexCode		//Load Hex code to ascii code data address
-	ldr	r12, =string		//Load macro string data address
+	//Set all number (hour, minute, second) to '0'
+  	mov r7, #48
+  	mov r8, #48
+  	mov r9, #48
+  	mov r10, #48
+  	mov r11, #48
+  	mov r12, #48
 
-	mov r3, #0
+	bl UART_print
 
-printRegisters:				//Print regiters
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printRegisters		//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+forever:
 
-	ldr r8, [r13, r3]		//Get register from stack(Not pop)
-	cmp r3, #52				//Check if it is sp
-	addeq r8, r8, #64		//If it is sp, decrease sp by 64 since sp is changed after debugMacro is called
+  	ldr r5, [r2]   					//Read the counter value
+  	ldr r6, [r3]   					//Read the status register
 
-printRegisterName:
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printRegisterName	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+	cmp r6, #1						//Check if timer ended
 
-	ldrb r4, [r12], #1		//Load one character from string
-	strb r4, [r1]			//Store one character from string to Tx FIFO
-	cmp r4, #0x00			//Check if string is end
-	bne printRegisterName	//If string is not end, repeat print
+	bleq Add_Timer					//If timer ended, print current time
 
-	mov r6, #28
-	mov r7, #0xF0000000		//Mask for register
-printHexMain:
-	and r9, r8, r7			//Mask 4 bits of register
-	mov r9, r9, lsr r6		//Shift masked value
-	add r5, r11, r9			//Find ascii code position of the value
-	ldrb r5, [r5]			//Get ascii code
-	strb r5, [r1]			//Store ascii code to Tx FIFO
+	b forever
 
-	cmp r6, #16				//Check if it is center of register
-	moveq r5, #95			//If it is center, print '_'
-	streqb r5, [r1]
+//Increase each numbers step by step, starts from first letter of second
+//If each number exceeds it's limit, reset to '0' and increase next letter by 1
+Add_Timer:
+	add r7, r7, #1
 
-	sub r6, r6, #4			//Decrease register masking position and mask
-	mov r7, r7, lsr #4
-	cmp r6, #-4
-	bne printHexMain		//If checking this register is not end, repeat above
+	cmp r7, #58
+	moveq r7, #48
+	addeq r8, r8, #1
 
-	add r3, r3, #4			//Move to next register
-	cmp r3, #64
-	bne printRegisters		//If there are registers left to check, repeat
+	cmp r8, #54
+	moveq r8, #48
+	addeq r9, r9, #1
 
+	cmp r9, #58
+	moveq r9, #48
+	addeq r10, r10, #1
 
-printNZCV:					//Print NZCV flags
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printNZCV			//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+	cmp r10, #54
+	moveq r10, #48
+	addeq r11, r11, #1
 
-	ldrb r4, [r12], #1		//Load one character from string
-	strb r4, [r1]			//Store one character from string to Tx FIFO
-	cmp r4, #0x00			//Check if string is end
-	bne printNZCV			//If string is not end, repeat print
+	cmp r11, #58
+	moveq r11, #48
+	addeq r12, r12, #1
 
-	and r4, r10, #0xf0000000 //Mask NZCV flags
-	mov r4, r4, lsr #28		//Shift masked value
-	mov r5, #5				//Find NZCV flags string position of the value
-	mul r4, r4, r5
-	ldr r5, =NZCVCode
-	add r5, r5, r4
+	cmp r12, #58
+	moveq r12, #48
 
-printNZCVStatus:
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printNZCVStatus		//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+	b UART_print
 
-	ldrb r4, [r5], #1		//Load one character from NZCV flags string
-	strb r4, [r1]			//Store one character from NZCV flags string to Tx FIFO
-	cmp r4, #0x00			//Check if NZCV flags string is end
-	bne printNZCVStatus		//If NZCV flags string is not end, repeat print
+UART_print:
+	ldr r4, [r0]			//Load UART status
+	and	r4, r4, #0x8
+	cmp	r4, #0x8			//Check if Tx FIFO is empty or not
+	bne	UART_print			//If Tx FIFO is not empty, loop this until Tx FIFO is empty
 
 
+	mov r4, #13
+	strb r4, [r1]			//Return cursor to start of the line
 
-printAIF:					//Print AIF flags
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printAIF			//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+	strb r12, [r1]			//Print first number of hour
+	strb r11, [r1]			//Print second number of hour
+	mov r4, #58
+	strb r4, [r1]			//Print ':' letter
 
-	ldrb r4, [r12], #1		//Load one character from string
-	strb r4, [r1]			//Store one character from string to Tx FIFO
-	cmp r4, #0x00			//Check if string is end
-	bne printAIF			//If string is not end, repeat print
+	strb r10, [r1]			//Print first number of minute
+	strb r9, [r1]			//Print second number of minute
+	mov r4, #58
+	strb r4, [r1]			//Print ':' letter
 
-	and r4, r10, #0x000001c0 //Mask AIF flags
-	mov r4, r4, lsr #6		//Shift masked value
-	mov r5, #4				//Find AIF flags string position of the value
-	mul r4, r4, r5
-	ldr r5, =AIFCode
-	add r5, r5, r4
+	strb r8, [r1]			//Print first number of second
+	strb r7, [r1]			//Print second number of second
 
-printAIFStatus:
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printAIFStatus		//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+	moveq  r4, #1
+	streq  r4, [r3]			//Clear status register
 
-	ldrb r4, [r5], #1		//Load one character from AIF flags
-	strb r4, [r1]			//Store one character from AIF flags to Tx FIFO
-	cmp r4, #0x00			//Check if AIF flags is end
-	bne printAIFStatus		//If AIF flags is not end, repeat print
-
-
-
-printCurrentMode:			//Print ISETSTATE
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printCurrentMode	//If Tx FIFO is not empty, loop this until Tx FIFO is empty
-
-	ldrb r4, [r12], #1		//Load one character from string
-	strb r4, [r1]			//Store one character from string to Tx FIFO
-	cmp r4, #0x00			//Check if string is end
-	bne printCurrentMode			//If string is not end, repeat print
-
-	and r5, r10, #0x01000000 //Mask J flags
-	mov r4, r5, lsr #23		//Shift and add J flag
-	and r5, r10, #0x00000020 //Mask T flags
-	add r4, r5, lsr #5		//Shift and add T flag
-	mov r5, #13				//Find ISETSTATE flags string position of the value
-	mul r4, r4, r5
-	ldr r5, =CModeCode
-	add r5, r5, r4
-
-printCurrentModeStatus:
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printCurrentModeStatus //If Tx FIFO is not empty, loop this until Tx FIFO is empty
-
-	ldrb r4, [r5], #1		//Load one character from ISETSTATE flags string
-	strb r4, [r1]			//Store one character from ISETSTATE flags string to Tx FIFO
-	cmp r4, #0x00			//Check if ISETSTATE flags string is end
-	bne printCurrentModeStatus //If ISETSTATE flags string is not end, repeat print
-
-
-
-printMode:					//Print processor mode
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printMode			//If Tx FIFO is not empty, loop this until Tx FIFO is empty
-
-	ldrb r4, [r12], #1		//Load one character from string
-	strb r4, [r1]			//Store one character from string to Tx FIFO
-	cmp r4, #0x00			//Check if string is end
-	bne printMode			//If string is not end, repeat print
-
-	//Check processor mode flags and set find processor mode string position of the value
-	and r4, r10, #0x0000001f
-	cmp r4, #0b10000
-	moveq r5, #0
-	cmp r4, #0b10001
-	moveq r5, #4
-	cmp r4, #0b10010
-	moveq r5, #8
-	cmp r4, #0b10011
-	moveq r5, #12
-	cmp r4, #0b10110
-	moveq r5, #16
-	cmp r4, #0b10111
-	moveq r5, #20
-	cmp r4, #0b11010
-	moveq r5, #24
-	cmp r4, #0b11011
-	moveq r5, #28
-	cmp r4, #0b11111
-	moveq r5, #32
-
-	mov r4, r5
-	ldr r5, =ModeCode
-	add r5, r5, r4
-
-printModeStatus:
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printModeStatus		//If Tx FIFO is not empty, loop this until Tx FIFO is empty
-
-	ldrb r4, [r5], #1		//Load one character from processor mode string
-	strb r4, [r1]			//Store one character from processor mode string to Tx FIFO
-	cmp r4, #0x00			//Check if processor mode string is end
-	bne printModeStatus		//If processor mode string is not end, repeat print
-
-
-
-	mov r6, #28
-	mov r7, #0xF0000000
-printCPSR:					//Print CPSR register, works same as printRegister
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printCPSR			//If Tx FIFO is not empty, loop this until Tx FIFO is empty
-
-	ldrb r4, [r12], #1		//Load one character from string
-	strb r4, [r1]			//Store one character from string to Tx FIFO
-	cmp r4, #0x00			//Check if string is end
-	bne printCPSR			//If string is not end, repeat print
-
-printCPSRStatus:
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printCPSRStatus		//If Tx FIFO is not empty, loop this until Tx FIFO is empty
-
-	and r9, r10, r7
-	mov r9, r9, lsr r6
-	add r5, r11, r9
-	ldrb r5, [r5]
-	strb r5, [r1]
-
-	cmp r6, #16
-	moveq r5, #95
-	streqb r5, [r1]
-
-	sub r6, r6, #4
-	mov r7, r7, lsr #4
-	cmp r6, #-4
-	bne printCPSRStatus
-
-
-
-printStringLeft:			//Print string left
-	ldr r2, [r0]			//Load UART status
-	and	r2, r2, #0x8
-	cmp	r2, #0x8			//Check if Tx FIFO is empty or not
-	bne	printStringLeft		//If Tx FIFO is not empty, loop this until Tx FIFO is empty
-
-	ldrb r4, [r12], #1		//Load one character from string
-	strb r4, [r1]			//Store one character from string to Tx FIFO
-	cmp r4, #0x00			//Check if string is end
-	bne printStringLeft		//If string is not end, repeat print
-
-
-
-	msr cpsr, r10			//Reset cpsr
-	ldmfd r13!, {r0-r12}	//Reset r0 to r12 registers
-	ldr r14, [r13, #4]		//Reset lr
-	ldr r13, [r13]			//Reset sp
-	add r13, r13, #64
-
-	mov pc, lr				//Return to caller
-
-
-
-.data
-.align 4
-Input_data:	.word 2, 0, -7, -1, 3, 8, -4, 10
-			.word -9, -16, 15, 13, 1, 4, -3, 14
-			.word -8, -10, -15, 6, -13, -5, 9, 12
-			.word -11, -14, -6, 11, 5, 7, -2, -12
-Output_data:	.word 0, 0, 0, 0, 0, 0, 0, 0
-				.word 0, 0, 0, 0, 0, 0, 0, 0
-				.word 0, 0, 0, 0, 0, 0, 0, 0
-				.word 0, 0, 0, 0, 0, 0, 0, 0
-
-HexCode:
-	.ascii "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"
-
-NZCVCode:
-	.ascii "nzcv"
-	.byte 0x00
-	.ascii "nzcV"
-	.byte 0x00
-	.ascii "nzCv"
-	.byte 0x00
-	.ascii "nzCV"
-	.byte 0x00
-	.ascii "nZcv"
-	.byte 0x00
-	.ascii "nZcV"
-	.byte 0x00
-	.ascii "nZCv"
-	.byte 0x00
-	.ascii "nZCV"
-	.byte 0x00
-	.ascii "Nzcv"
-	.byte 0x00
-	.ascii "NzcV"
-	.byte 0x00
-	.ascii "NzCv"
-	.byte 0x00
-	.ascii "NzCV"
-	.byte 0x00
-	.ascii "NZcv"
-	.byte 0x00
-	.ascii "NZcV"
-	.byte 0x00
-	.ascii "NZCv"
-	.byte 0x00
-	.ascii "NZCV"
-	.byte 0x00
-
-AIFCode:
-	.ascii "aif"
-	.byte 0x00
-	.ascii "aiF"
-	.byte 0x00
-	.ascii "aIf"
-	.byte 0x00
-	.ascii "aIF"
-	.byte 0x00
-	.ascii "Aif"
-	.byte 0x00
-	.ascii "AiF"
-	.byte 0x00
-	.ascii "AIf"
-	.byte 0x00
-	.ascii "AIF"
-	.byte 0x00
-
-ModeCode:
-	.ascii "USR"
-	.byte 0x00
-	.ascii "FIQ"
-	.byte 0x00
-	.ascii "IRQ"
-	.byte 0x00
-	.ascii "SVC"
-	.byte 0x00
-	.ascii "MON"
-	.byte 0x00
-	.ascii "ABT"
-	.byte 0x00
-	.ascii "HYP"
-	.byte 0x00
-	.ascii "UND"
-	.byte 0x00
-	.ascii "SYS"
-	.byte 0x00
-
-CModeCode:
-	.ascii "ARM mode"
-	.byte 0x00
-	.byte 0x00
-	.byte 0x00
-	.byte 0x00
-	.byte 0x00
-	.ascii "Thumb mode"
-	.byte 0x00
-	.byte 0x00
-	.byte 0x00
-	.ascii "Jazelle mode"
-	.byte 0x00
-	.ascii "ThumbEE mode"
-	.byte 0x00
-
-string:
-	.byte 0x0D, 0x0A
-	.ascii "-----------------------------------------------------------------------------------------------------"
-	.byte 0x0D, 0x0A
-	.ascii "r0 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r1 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r2 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r3 = 0x"
-	.byte 0x00, 0x0D, 0x0A
-	.ascii "r4 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r5 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r6 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r7 = 0x"
-	.byte 0x00, 0x0D, 0x0A
-	.ascii "r8 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r9 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r10 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r11 = 0x"
-	.byte 0x00, 0x0D, 0x0A
-	.ascii "r12 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r13 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r14 = 0x"
-	.byte 0x00, 0x2C, 0x09
-	.ascii "r15 = 0x"
-	.byte 0x00, 0x0D, 0x0A
-	.ascii "cpsr = "
-	.byte 0x00, 0x2C, 0x09
-	.byte 0x00, 0x2C, 0x09
-	.byte 0x00, 0x2C, 0x09
-	.ascii "current mode = "
-	.byte 0x00, 0x09
-	.ascii " ( =0x"
-	.byte 0x00
-	.ascii ")"
-	.byte 0x0D, 0x0A
-	.ascii "-----------------------------------------------------------------------------------------------------"
-	.byte 0x0D, 0x0A, 0x00
+	mov pc, lr
 

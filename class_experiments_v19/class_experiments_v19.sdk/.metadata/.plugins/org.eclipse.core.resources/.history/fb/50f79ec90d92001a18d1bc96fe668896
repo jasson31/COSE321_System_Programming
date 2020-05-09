@@ -1,0 +1,201 @@
+
+#include "uart_init.s"
+
+.global main
+main:
+	UART_init				// UART Initialization
+
+	ldr r0, =Input_data		//Used for input data address indexing
+	ldr r1, =Output_data	//Used for output data address indexing
+
+	sub r9, r1, r0			//Get total data length
+
+	ldr r3, [r0]
+ 	str r3, [r1]			//Copy 0th index value of input data to output data
+	mov r2, #4				//R2 for index of value to insert
+
+	bl debugMacro			//Debugging macro
+
+insertion_loop:				//Starts insertion sort algorithm
+	mov r3, r2				//R3 for insertion loop count
+	ldr r4, [r0, r2]		//Load value to insert from input data
+
+find_position:				//Find position to insert value
+	sub r6, r3, #4			//R6 for index of value to compare
+	ldr r5, [r1, r6]		//Load value to compare from output data
+
+	cmp r4, r5				//Compare values
+	bge end_loop			//If value to insert is greater than compared value, insert position is found
+
+	str r5, [r1, r3]		//Push compared value backward
+
+	subs r3, r3, #4			//Decrease loop count
+	bne find_position		//If loop count is 0, end insertion loop
+
+end_loop:					//End of the insertion loop
+	str r4, [r1, r3]		//Insert the insert value to the position found
+	add r2, r2, #4			//Increase the insert value index
+
+	cmp r2, r9				//Compare if insert value index is over total data length
+
+	bl debugMacro			//Debugging macro
+
+	bge forever				//If inserted all values, end program
+
+	b insertion_loop		//Do insertion loop again
+
+forever:					//Program ended
+	nop
+	b forever
+
+.data
+.align 4
+Input_data:	.word 2, 0, -7, -1, 3, 8, -4, 10
+			.word -9, -16, 15, 13, 1, 4, -3, 14
+			.word -8, -10, -15, 6, -13, -5, 9, 12
+			.word -11, -14, -6, 11, 5, 7, -2, -12
+Output_data:	.word 0, 0, 0, 0, 0, 0, 0, 0
+				.word 0, 0, 0, 0, 0, 0, 0, 0
+				.word 0, 0, 0, 0, 0, 0, 0, 0
+				.word 0, 0, 0, 0, 0, 0, 0, 0
+
+HexCode:
+	.ascii "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"
+
+NZCVCode:
+	.ascii "nzcv"
+	.byte 0x00
+	.ascii "nzcV"
+	.byte 0x00
+	.ascii "nzCv"
+	.byte 0x00
+	.ascii "nzCV"
+	.byte 0x00
+	.ascii "nZcv"
+	.byte 0x00
+	.ascii "nZcV"
+	.byte 0x00
+	.ascii "nZCv"
+	.byte 0x00
+	.ascii "nZCV"
+	.byte 0x00
+	.ascii "Nzcv"
+	.byte 0x00
+	.ascii "NzcV"
+	.byte 0x00
+	.ascii "NzCv"
+	.byte 0x00
+	.ascii "NzCV"
+	.byte 0x00
+	.ascii "NZcv"
+	.byte 0x00
+	.ascii "NZcV"
+	.byte 0x00
+	.ascii "NZCv"
+	.byte 0x00
+	.ascii "NZCV"
+	.byte 0x00
+
+AIFCode:
+	.ascii "aif"
+	.byte 0x00
+	.ascii "aiF"
+	.byte 0x00
+	.ascii "aIf"
+	.byte 0x00
+	.ascii "aIF"
+	.byte 0x00
+	.ascii "Aif"
+	.byte 0x00
+	.ascii "AiF"
+	.byte 0x00
+	.ascii "AIf"
+	.byte 0x00
+	.ascii "AIF"
+	.byte 0x00
+
+ModeCode:
+	.ascii "USR"
+	.byte 0x00
+	.ascii "FIQ"
+	.byte 0x00
+	.ascii "IRQ"
+	.byte 0x00
+	.ascii "SVC"
+	.byte 0x00
+	.ascii "MON"
+	.byte 0x00
+	.ascii "ABT"
+	.byte 0x00
+	.ascii "HYP"
+	.byte 0x00
+	.ascii "UND"
+	.byte 0x00
+	.ascii "SYS"
+	.byte 0x00
+
+CModeCode:
+	.ascii "ARM mode"
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.ascii "Thumb mode"
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.ascii "Jazelle mode"
+	.byte 0x00
+	.ascii "ThumbEE mode"
+	.byte 0x00
+
+string:
+	.byte 0x0D, 0x0A
+	.ascii "-----------------------------------------------------------------------------------------------------"
+	.byte 0x0D, 0x0A
+	.ascii "r0 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r1 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r2 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r3 = 0x"
+	.byte 0x00, 0x0D, 0x0A
+	.ascii "r4 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r5 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r6 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r7 = 0x"
+	.byte 0x00, 0x0D, 0x0A
+	.ascii "r8 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r9 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r10 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r11 = 0x"
+	.byte 0x00, 0x0D, 0x0A
+	.ascii "r12 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r13 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r14 = 0x"
+	.byte 0x00, 0x2C, 0x09
+	.ascii "r15 = 0x"
+	.byte 0x00, 0x0D, 0x0A
+	.ascii "cpsr = "
+	.byte 0x00, 0x2C, 0x09
+	.byte 0x00, 0x2C, 0x09
+	.byte 0x00, 0x2C, 0x09
+	.ascii "current mode = "
+	.byte 0x00, 0x09
+	.ascii " ( =0x"
+	.byte 0x00
+	.ascii ")"
+	.byte 0x0D, 0x0A
+	.ascii "-----------------------------------------------------------------------------------------------------"
+	.byte 0x0D, 0x0A, 0x00
+

@@ -1,0 +1,73 @@
+// ------------------------------------------
+//  Author: Prof. Taeweon Suh
+//          Computer Science & Engineering
+//          College of Informatics, Korea Univ.
+//  Date:   April 27, 2020
+// ------------------------------------------
+
+#include "uart_init.s"
+#include "csd_zynq_peripherals.h"
+
+#define TIMER_INITIAL	333000000
+
+.global main
+main:
+
+	UART_init		// UART Initialization
+
+
+	// --------------------------------------
+	//  To distribute the learning burden.
+	// -- stack is NOT used in private timer code
+	// -- stack will be used in the interrupt code
+	// --------------------------------------
+
+	mrs	r0, cpsr			/* get the current PSR */
+	mvn	r1, #0x1f		/* To mask out the MODE bits (M[4:0]) in CPSR */
+	and	r2, r1, r0
+	orr	r2, r2, #0x1F	/* SYS mode */
+	msr	cpsr, r2
+
+ 	// Private Timer Load Register
+	ldr r0, =PRIVATE_LOAD
+ 	ldr r1, =TIMER_INITIAL
+ 	str r1, [r0]
+
+ 	// Private Timer Control Register
+  	ldr r0, =PRIVATE_CONTROL
+ 	mov r1, #0
+ 	orr r1, r1, #7     // IRQ Enable, Auto-Reload, Timer Enable
+ 	str r1, [r0]
+
+	ldr r0, =uart_Channel_sts_reg0	//Load UART status register address
+	ldr r1, =uart_TX_RX_FIFO0		//Load UART FIFO register address
+  	ldr r2, =PRIVATE_COUNTER
+  	ldr r3, =PRIVATE_STATUS
+
+forever:
+
+  	ldr r5, [r2]   // Read the counter value
+  	ldr r6, [r3]   // Read the status register
+
+	// Toggle LEDs if the counter value reaches to 0
+	cmp r6, #1
+	bleq UART_print
+	b forever
+
+UART_print:
+	ldr r4, [r0]			//Load UART status
+	and	r4, r4, #0x8
+	cmp	r4, #0x8			//Check if Tx FIFO is empty or not
+	bne	UART_print			//If Tx FIFO is not empty, loop this until Tx FIFO is empty
+
+	mov r4, #48		//Load one character from string
+	strb r4, [r1]			//Store one character from string to Tx FIFO
+	cmp r4, #0x00			//Check if string is end
+	bne UART_print			//If string is not end, repeat print
+
+
+	moveq  r12, #1
+	streq  r12, [r3] // to clear sticky bit in the status register
+
+	mov pc, lr
+

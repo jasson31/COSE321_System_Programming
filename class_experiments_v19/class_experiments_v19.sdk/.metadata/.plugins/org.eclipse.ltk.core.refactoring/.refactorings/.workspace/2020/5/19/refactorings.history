@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;csd_lab/src/debug_macro.s&apos;" deleteContents="false" description="Delete resource &apos;csd_lab/src/debug_macro.s&apos;" element1="/csd_lab/src/debug_macro.s" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1589039730728"/>
+</session>

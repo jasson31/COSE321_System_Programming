@@ -38,12 +38,17 @@ main:
 	cpsIE i
 
 
+
+
+
+
 	// Distributor Control Register
 	ldr r0, =GICD_CTLR
 	ldr r1, [r0]
 	mov r2, #1       // Enable
 	orr r1, r1, r2
 	str r1, [r0]
+	ldr r3, [r0]
 
 	 // Interrupt Set-Enable Register 0
 	ldr r0, =GICD_ISENABLER0
@@ -51,6 +56,7 @@ main:
 	mov r2, #1 << 29   // Enable #29 (Private Timer)
 	orr r1, r1, r2
 	str r1, [r0]
+	ldr r3, [r0]
 
 	// According to specifications,
 	// Cortex-A9 supports 5-bit version of priority format [7:3] in secure world
@@ -62,6 +68,7 @@ main:
 	mov r2, #0x10 << 8    // Priority 16 for ID# 29 (Private Timer)
 	orr r1, r1, r2
 	str r1, [r0]
+	ldr r3, [r0]
 
 	// CPU Interface Control Register
 	ldr r0, =GICC_CTLR
@@ -69,6 +76,7 @@ main:
 	mov r2, #1        // Enable
 	orr r1, r1, r2
 	str r1, [r0]
+	ldr r3, [r0]
 
  	// CPU Interface Interrupt Priority Mask Register
 	ldr r0, =GICC_PMR
@@ -76,6 +84,7 @@ main:
 	mov r2, #0xFF     // Lowest
 	orr r1, r1, r2
 	str r1, [r0]
+	ldr r3, [r0]
 
 
 
@@ -110,8 +119,14 @@ main:
 	bl UART_print
 
 forever:
-	nop
-	nop
+
+  	ldr r5, [r2]   					//Read the counter value
+  	ldr r6, [r3]   					//Read the status register
+
+	cmp r6, #1						//Check if timer ended
+
+	bleq Add_Timer					//If timer ended, print current time
+
 	b forever
 
 //Increase each numbers step by step, starts from first letter of second
@@ -175,20 +190,20 @@ UART_print:
 
 csd_IRQ_ISR:
 
-	stmfd sp!, {r0-r6, lr}
+	stmfd sp!, {r0-r12, lr}
 
  	// Interrupt Ack
-  	ldr r2, =GICC_IAR
-	ldr r2, [r2]
+  	ldr r0, =GICC_IAR
+	ldr r3, [r0]
 
-	bl Add_Timer			//If timer ended, print current time
+	bl	Add_Timer					//If timer ended, print current time
 
 
  	// End-of-Interrupt
   	ldr r0, =GICC_EOIR
-	str r2, [r0]
+	str r3, [r0]
 
-	ldmfd sp!, {r0-r6, lr}
+	ldmfd sp!, {r0-r12, lr}
 	subs pc, lr, #4
 
 .data

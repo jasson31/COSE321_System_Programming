@@ -1,5 +1,4 @@
 
-#include "uart_init.s"
 #include "csd_zynq_peripherals.h"
 
 #define TIMER_INITIAL	333000000
@@ -17,14 +16,19 @@ csd_vector_table:
 	b .
 
 .global main
-main:
-	UART_init		// UART Initialization
+main
 
 	// Disable interrupt: CPSR'I = 1
 	cpsID i
 
 	cps #0x12	   	       // IRQ mode
 	ldr	r13,=irq_stack_top // Stack pointer setup for IRQ mode
+
+	cps #0x13		          // supervisor mode
+	ldr	r13,=svc_stack_top // Stack pointer setup for SVC mode
+
+	cps #0x11		          // FIQ mode
+	ldr	r13,=fiq_stack_top // Stack pointer setup for FIQ mode
 
 	cps #0x1F	             // SYS mode
 
@@ -38,50 +42,11 @@ main:
 	cpsIE i
 
 
-	// Distributor Control Register
-	ldr r0, =GICD_CTLR
-	ldr r1, [r0]
-	mov r2, #1       // Enable
-	orr r1, r1, r2
-	str r1, [r0]
-
-	 // Interrupt Set-Enable Register 0
-	ldr r0, =GICD_ISENABLER0
-	ldr r1, [r0]
-	mov r2, #1 << 29   // Enable #29 (Private Timer)
-	orr r1, r1, r2
-	str r1, [r0]
-
-	// According to specifications,
-	// Cortex-A9 supports 5-bit version of priority format [7:3] in secure world
-	// ( 0 -> 8 -> 16 -> 24...)
-
-	// Interrupt Priority Register #7
-	ldr r0, =GICD_PRIOR7
-	ldr r1, [r0]
-	mov r2, #0x10 << 8    // Priority 16 for ID# 29 (Private Timer)
-	orr r1, r1, r2
-	str r1, [r0]
-
-	// CPU Interface Control Register
-	ldr r0, =GICC_CTLR
-	ldr r1, [r0]
-	mov r2, #1        // Enable
-	orr r1, r1, r2
-	str r1, [r0]
-
- 	// CPU Interface Interrupt Priority Mask Register
-	ldr r0, =GICC_PMR
-	ldr r1, [r0]
-	mov r2, #0xFF     // Lowest
-	orr r1, r1, r2
-	str r1, [r0]
-
-
-
-
-
-
+	mrs	r0, cpsr			/* get the current PSR */
+	mvn	r1, #0x1f		/* To mask out the MODE bits (M[4:0]) in CPSR */
+	and	r2, r1, r0
+	orr	r2, r2, #0x1F	/* SYS mode */
+	msr	cpsr, r2
 
  	// Private Timer Load Register
 	ldr r0, =PRIVATE_LOAD
@@ -110,8 +75,14 @@ main:
 	bl UART_print
 
 forever:
-	nop
-	nop
+
+  	ldr r5, [r2]   					//Read the counter value
+  	ldr r6, [r3]   					//Read the status register
+
+	cmp r6, #1						//Check if timer ended
+
+	bleq Add_Timer					//If timer ended, print current time
+
 	b forever
 
 //Increase each numbers step by step, starts from first letter of second
@@ -175,20 +146,19 @@ UART_print:
 
 csd_IRQ_ISR:
 
-	stmfd sp!, {r0-r6, lr}
+	stmfd sp!, {r0-r12, lr}
 
  	// Interrupt Ack
-  	ldr r2, =GICC_IAR
-	ldr r2, [r2]
+  	ldr r0, =GICC_IAR
+	ldr r3, [r0]
 
-	bl Add_Timer			//If timer ended, print current time
 
 
  	// End-of-Interrupt
   	ldr r0, =GICC_EOIR
-	str r2, [r0]
+	str r3, [r0]
 
-	ldmfd sp!, {r0-r6, lr}
+	ldmfd sp!, {r0-r12, lr}
 	subs pc, lr, #4
 
 .data
@@ -196,5 +166,9 @@ csd_IRQ_ISR:
 
 	irq_stack:     .space 1024
 	irq_stack_top:
+	fiq_stack:     .space 1024
+	fiq_stack_top:
+	svc_stack:     .space 1024
+	svc_stack_top:
 
 
